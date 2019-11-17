@@ -1,0 +1,334 @@
+---
+title: "Data 607 Final Project"
+author: "Ajay Arora and Mario Pena"
+date: "November 14, 2019"
+output: 
+  html_document:
+    toc: yes
+    toc_depth: 2
+    toc_float: yes
+  
+#Link to presentation: TODO
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Introduction
+
+The final project requirements have been identified in the document located at this link: https://bbhosted.cuny.edu/bbcswebdav/pid-42265237-dt-content-rid-347468186_1/courses/SPS01_DATA_607_01_1199_1/607-Final%281%29.pdf
+
+
+
+# Team Members
+
+Mario Pena    
+
+Ajay Arora
+
+# Initial Communication / Establishing Work Activity
+
+We enjoyed collaboration on the 3rd project that we decieded to continue work on the final project.  We established communication over #Slack and spoke over the phone to introduce ourselves properly.  Furthermore, we divided the work effort in half.  The work effort consisted of Data Preparation, Data Cleaning, Data Analysis, and Conclusion.
+
+
+# Ongoing Communication / Artifact Location
+
+We both decided to communicate via email and/or #Slack.  In addition, we establihed a Project 3 group folder on GitHub.  
+
+  https://github.com/AjayArora35/Data-607-Group-Project-3
+
+  https://data607fall2019.slack.com/
+  
+# Data
+
+The data was acquired at https://www-nrd.nhtsa.dot.gov/database/veh/veh.htm.  (https://www-nrd.nhtsa.dot.gov/database/VSR/Download.aspx?tstno=&curno=&database=v&name=Vehdb-export&format=export)  
+
+###Injury Criteria
+Head Injury Criterion, Left Femur Load, Right Femur Load
+
+# Analysis Goals 
+
+### National Highway Traffic Safety Administration
+
+Based on the recommendations, following this section, provided by the National Highway Traffic Safety Administration, we want to perform analysis to determine which vehicles have the best and worst injury severity ratings based upon the criteria listed above.  
+
+### Recommendations
+
+![National Highway Traffic Safety Administration Recommendations]("./AJAY/Data 607 Homework/Final Project/Recommendations.png")
+
+
+# Preparing Environment
+```{r}
+#Loading Libraries
+library(DBI)
+library("knitr")
+library("tidyverse")
+library("tidyr")
+library("dplyr")
+library("stringr")
+library("plotly")
+library("htmlTable")
+library("stringr")
+library("ggplot2")
+library("stats")
+library("scales")
+library("viridis")
+library("wordcloud")
+```
+
+# Data Preparation for Summarized 
+
+## Retrieve data from MySQL hosted in AWS
+
+
+```{r}
+#data <- read.csv(file="https://raw.githubusercontent.com/AjayArora35/Data-607-Group-Project-3/master/Data%20Science%20Software%20Skills.csv", header=TRUE, stringsAsFactors = FALSE)
+
+#data2C <- read.csv(file="https://raw.githubusercontent.com/AjayArora35/Data-607-Group-Project-3/master/Data%20Science%20Computing%20Skills.csv", header=TRUE, stringsAsFactors = FALSE)
+
+cn <- dbConnect(drv      = RMySQL::MySQL(), 
+                username = "admin", 
+                password = "Data__607", 
+                host     = "database-1.cxdov2mcmzlo.us-east-2.rds.amazonaws.com", 
+                port     = 3306, 
+                dbname   = "data607finalproject")
+
+
+data <- dbGetQuery(cn, "SELECT 
+RD.MAKED
+,MAX(`Head Injury Criterion`) AS HIC
+,MAX(`Left Femur Load`) AS LFL
+,MAX(`Right Femur Load`) AS RFL
+,MIN(`Head Injury Criterion`) AS min_HIC
+,MIN(`Left Femur Load`) AS min_LFL
+,MIN(`Right Femur Load`) AS min_RFL
+FROM
+(SELECT v.MAKED
+		, v.YEAR
+		, AVG(convert(o.HIC, SIGNED INTEGER)) AS `Head Injury Criterion`
+		, AVG(convert(o.LFEM , SIGNED INTEGER)) AS `Left Femur Load`
+		, AVG(convert(o.RFEM , SIGNED INTEGER)) AS `Right Femur Load`
+  FROM data607finalproject.test t
+  inner join data607finalproject.veh v
+  on(v.TSTNO = t.TSTNO)
+  inner join data607finalproject.occ o
+  on(o.TSTNO = v.TSTNO)
+  inner join data607finalproject.rest r
+  on(r.TSTNO = v.TSTNO)
+  AND (r.VEHNO = v.VEHNO)
+WHERE v.MAKED != 'NHTSA' 
+	AND v.MAKED NOT IN ('MCI') 
+	AND  v.YEAR != '' 
+	AND v.YEAR != 0 
+	AND  (o.LFEM != '' AND o.LFEM != 0) 
+	AND (o.RFEM != '' AND o.RFEM != 0)
+    AND r.DEPLOYD = 'DEPLOYED PROPERLY'
+GROUP BY
+	v.MAKED
+	,v.YEAR
+) AS RD
+GROUP BY 
+RD.MAKED 
+ORDER BY
+RD.MAKED")
+
+
+
+```
+
+```{r}
+
+(data)
+
+```
+#Data Cleaning
+
+###Convert to numerics and truncate
+
+```{r}
+data$HIC <- as.numeric(gsub(",","", data$HIC))
+data$LFL <- as.numeric(gsub(",","", data$LFL))
+data$RFL <- as.numeric(gsub(",","", data$RFL))
+
+data$min_HIC <- as.numeric(gsub(",","", data$min_HIC))
+data$min_LFL <- as.numeric(gsub(",","", data$min_LFL))
+data$min_RFL <- as.numeric(gsub(",","", data$min_RFL))
+
+data$HIC <- trunc(data$HIC)
+data$LFL <- trunc(data$LFL)
+data$RFL <- trunc(data$RFL)
+
+data$min_HIC <- trunc(data$min_HIC)
+data$min_LFL <- trunc(data$min_LFL)
+data$minRFL <- trunc(data$min_RFL)
+
+```
+
+
+
+#Analysis
+### What is the maximum Head Injury Criterion per vehicle?
+### Integer, 0 to 9,999
+### HIC is the computed value of the head injury criterion, based on the resultant acceleration pulse for the head center of gravity.
+### --https://www.intmath.com/applications-integration/hic-part2.php
+### --Generally, experts agree that Head Injury Criterion (HIC) values above 1000 are life threatening.
+
+```{r}
+grid1 <- ggplot(data = data,aes(x=reorder(data$MAKED, data$HIC), y=data$HIC, fill = viridis(49), )) + 
+  theme(legend.position = "none", axis.text.y = element_text(size=6), axis.text.x = element_text(size=7)) +
+  geom_bar(stat = "identity") + 
+  geom_label(aes(label=data$HIC), position = position_dodge(width = 0.5), size = 2.4,   label.padding = unit(0.04, "lines"), label.size = 0.15, inherit.aes = TRUE)+
+  labs(title = "Maximum Head Injury Criterion", x = "Vehicles", y = "Severity")+
+  coord_flip()
+grid1
+```
+### HIC Discussion
+The summarized data for HCI was generated by taking the maximum of HCI value for each type of vehicle over the years the vehicle has been monitored.  
+The Head Injury Criterion (HIC) is a measure of the likelihood of head injury arising from an impact. The HIC can be used to assess safety related to vehicles, personal protective gear, and sport equipment. 
+Normally the variable is derived from the measurements of an accelerometer mounted at the center of mass of a crash test dummy's head, when the dummy is exposed to crash forces. 
+
+This means that the HIC includes the effects of head acceleration and the duration of the acceleration. Large accelerations may be tolerated for very short times. 
+At a HIC of 1000, there is an 18% probability of a severe head injury, a 55% probability of a serious injury and a 90% probability of a moderate head injury to the average adult. 
+
+### What is the maximum Left Femur Peak Load per vehicle?
+### Numeric, integer.
+### LFEM indicates the maximum compression load for the left femur. Listed as a negative number.
+
+```{r}
+grid2 <- ggplot(data = data,aes(x=reorder(data$MAKED, data$LFL), y=data$LFL, fill = viridis(49), )) + 
+  theme(legend.position = "none", axis.text.y = element_text(size=6), axis.text.x = element_text(size=7)) +
+  geom_bar(stat = "identity") + 
+  geom_label(aes(label=data$LFL), position = position_dodge(width = 0.5), size = 2.4,   label.padding = unit(0.04, "lines"), label.size = 0.15, inherit.aes = TRUE)+
+  labs(title = " Maximum Left Femur Peak Load", x = "Vehicles", y = "Severity")+
+  coord_flip()
+grid2
+```
+
+### What is the maximum Right Femur Peak Load per vehicle?
+### Numeric, integer.
+### RFEM indicates the maximum compression load for the right femur. Listed as a negative number.
+
+```{r}
+grid3 <- ggplot(data = data,aes(x=reorder(data$MAKED, data$RFL), y=data$RFL, fill = viridis(49), )) + 
+  theme(legend.position = "none", axis.text.y = element_text(size=6), axis.text.x = element_text(size=7)) +
+  geom_bar(stat = "identity") + 
+  geom_label(aes(label=data$RFL), position = position_dodge(width = 0.5), size = 2.4,   label.padding = unit(0.04, "lines"), label.size = 0.15, inherit.aes = TRUE)+
+  labs(title = " Maximum Right Femur Peak Load", x = "Vehicles", y = "Severity")+
+  coord_flip()
+grid3
+```
+  
+
+### What is minimum Head Injury Criterion per vehicle?
+```{r}
+grid4 <- ggplot(data = data,aes(x=reorder(data$MAKED, data$min_HIC), y=data$min_HIC, fill = viridis(49), )) + 
+  theme(legend.position = "none", axis.text.y = element_text(size=6), axis.text.x = element_text(size=7)) +
+  geom_bar(stat = "identity") + 
+  geom_label(aes(label=data$min_HIC), position = position_dodge(width = 0.5), size = 2.4,   label.padding = unit(0.04, "lines"), label.size = 0.15, inherit.aes = TRUE)+
+  labs(title = "Minimum Head Injury Criterion", x = "Vehicles", y = "Severity")+
+  coord_flip()
+grid4
+```
+
+
+### What is the minimum Left Femur Peak Load per vehicle?
+```{r}
+grid5 <- ggplot(data = data,aes(x=reorder(data$MAKED, data$min_LFL), y=data$min_LFL, fill = viridis(49), )) + 
+  theme(legend.position = "none", axis.text.y = element_text(size=6), axis.text.x = element_text(size=7)) +
+  geom_bar(stat = "identity") + 
+  geom_label(aes(label=data$min_LFL), position = position_dodge(width = 0.5), size = 2.4,   label.padding = unit(0.04, "lines"), label.size = 0.15, inherit.aes = TRUE)+
+  labs(title = " Minimum Left Femur Peak Load", x = "Vehicles", y = "Severity")+
+  coord_flip()
+grid5
+```
+
+### What is the minimum Right Femur Peak Load per vehicle?
+
+```{r}
+grid6 <- ggplot(data = data,aes(x=reorder(data$MAKED, data$min_RFL), y=data$min_RFL, fill = viridis(49), )) + 
+  theme(legend.position = "none", axis.text.y = element_text(size=6), axis.text.x = element_text(size=7)) +
+  geom_bar(stat = "identity") + 
+  geom_label(aes(label=data$min_RFL), position = position_dodge(width = 0.5), size = 2.4,   label.padding = unit(0.04, "lines"), label.size = 0.15, inherit.aes = TRUE)+
+  labs(title = " Minimum Right Femur Peak Load", x = "Vehicles", y = "Severity")+
+  coord_flip()
+grid6
+```
+### Summarized view of the data for HCI, LFEM and RFEM does not reveal the details necessary for making a more informed decision about a vehicle.  For example, suppose a potential vehicle buyer wanted to know these values based on the year, type of vehicle, location of the occputant, etc.  The summarized views don't provide that level of detail.  So, it becomes necessary to retrieve data with year and type of vehicle, etc.
+
+
+
+# Data Preparation for Granular  
+
+## Retrieve data from MySQL hosted in AWS
+
+
+```{r}
+#data <- read.csv(file="https://raw.githubusercontent.com/AjayArora35/Data-607-Group-Project-3/master/Data%20Science%20Software%20Skills.csv", header=TRUE, stringsAsFactors = FALSE)
+
+#data2C <- read.csv(file="https://raw.githubusercontent.com/AjayArora35/Data-607-Group-Project-3/master/Data%20Science%20Computing%20Skills.csv", header=TRUE, stringsAsFactors = FALSE)
+
+cn <- dbConnect(drv      = RMySQL::MySQL(), 
+                username = "admin", 
+                password = "Data__607", 
+                host     = "database-1.cxdov2mcmzlo.us-east-2.rds.amazonaws.com", 
+                port     = 3306, 
+                dbname   = "data607finalproject")
+
+
+data2 <- dbGetQuery(cn, "SELECT v.MAKED
+		, v.YEAR
+		, v.BODYD
+		, o.OCCLOCD
+		, o.HIC AS `Head Injury Criterion`
+		, o.LFEM AS `Left Femur Load`
+		, o.RFEM AS `Right Femur Load`
+
+  FROM data607finalproject.test t
+  inner join data607finalproject.veh v
+  on(v.TSTNO = t.TSTNO)
+  inner join data607finalproject.occ o
+  on(o.TSTNO = v.TSTNO)
+  inner join data607finalproject.rest r
+  on(r.TSTNO = t.TSTNO)
+WHERE v.MAKED != 'NHTSA' 
+	AND v.MAKED NOT IN ('MCI') 
+	AND  (o.LFEM != '' AND o.LFEM != 0) 
+	AND (o.RFEM != '' AND o.RFEM != 0)
+	AND (r.DEPLOYD = N'DEPLOYED PROPERLY')
+GROUP BY
+v.MAKED
+		, v.YEAR
+		, v.BODYD
+		, o.OCCLOCD
+		, o.HIC 
+		, o.LFEM 
+		, o.RFEM 
+ORDER BY v.MAKED ")
+
+
+
+```
+
+
+```{r}
+data2
+
+```
+
+
+
+
+
+References:
+
+https://www.intmath.com/applications-integration/hic-part2.php
+
+https://www.nhtsa.gov/sites/nhtsa.dot.gov/files/vehdb-v4.pdf
+
+https://www.nhtsa.gov/sites/nhtsa.dot.gov/files/rev_criteria_0.pdf
+
+https://www.nhtsa.gov/sites/nhtsa.dot.gov/files/rev_criteria_0.pdf
+
+https://en.wikipedia.org > wiki > Head_injury_criterion
