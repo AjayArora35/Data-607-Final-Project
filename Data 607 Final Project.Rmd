@@ -45,18 +45,26 @@ We both decided to communicate via email and/or #Slack.  In addition, we establi
 
 The data was acquired at https://www-nrd.nhtsa.dot.gov/database/veh/veh.htm.  (https://www-nrd.nhtsa.dot.gov/database/VSR/Download.aspx?tstno=&curno=&database=v&name=Vehdb-export&format=export)  
 
-###Injury Criteria
+### Goal
+Specifically, Which vehicle or set of vehicles are the safest from a head and leg injury perspective.
+
+### Injury Criteria
 Head Injury Criterion, Left Femur Load, Right Femur Load
 
 # Analysis Goals 
 
 ### National Highway Traffic Safety Administration
+Based on the recommendations, following this section, provided by the National Highway Traffic Safety Administration, we want to perform analysis to determine which vehicles have the best and worst injury severity ratings based upon the criteria listed above and using the following attributes.
 
-Based on the recommendations, following this section, provided by the National Highway Traffic Safety Administration, we want to perform analysis to determine which vehicles have the best and worst injury severity ratings based upon the criteria listed above.  
+### Attributes
+Vehicle year, Vehicle body type, and occupant location. 
 
-### Recommendations
+### Motiviation
+The National Highway Traffic Safety Administration makes their recommendation using a star rating system. More Stars mean Safer Cars. 5-Star Safety Ratings measure the crashworthiness and rollover safety of vehicles. Five stars is the highest rating, one is the lowest. However, some of the vehicles getting a 5-star rating could be cost prohibitive for some consumers or not aligned with their personal taste. In this instance, a more detailed analysis of the injury criteria and attributes are warranted.  
 
-![National Highway Traffic Safety Administration Recommendations]("./AJAY/Data 607 Homework/Final Project/Recommendations.png")
+### National Highway Traffic Safety Administration Recommendations
+
+![National Highway Traffic Safety Administration Recommendations](images/Recommendations.png)
 
 
 # Preparing Environment
@@ -140,7 +148,7 @@ RD.MAKED")
 
 ```{r}
 
-(data)
+head(data)
 
 ```
 #Data Cleaning
@@ -259,7 +267,7 @@ grid6
 
 
 
-# Data Preparation for Granular  
+# Data Preparation with additional attributes  
 
 ## Retrieve data from MySQL hosted in AWS
 
@@ -281,9 +289,9 @@ data2 <- dbGetQuery(cn, "SELECT v.MAKED
 		, v.YEAR
 		, v.BODYD
 		, o.OCCLOCD
-		, o.HIC AS `Head Injury Criterion`
-		, o.LFEM AS `Left Femur Load`
-		, o.RFEM AS `Right Femur Load`
+		, o.HIC AS HIC
+		, o.LFEM AS LFL
+		, o.RFEM AS RFL
 
   FROM data607finalproject.test t
   inner join data607finalproject.veh v
@@ -293,10 +301,12 @@ data2 <- dbGetQuery(cn, "SELECT v.MAKED
   inner join data607finalproject.rest r
   on(r.TSTNO = t.TSTNO)
 WHERE v.MAKED != 'NHTSA' 
-	AND v.MAKED NOT IN ('MCI') 
+	AND v.MAKED NOT IN ('MCI', 'OTHER') 
 	AND  (o.LFEM != '' AND o.LFEM != 0) 
 	AND (o.RFEM != '' AND o.RFEM != 0)
 	AND (r.DEPLOYD = N'DEPLOYED PROPERLY')
+	AND (o.HIC != '' AND o.HIC != 0)
+	AND (v.YEAR != 0 and v.YEAR != '')
 GROUP BY
 v.MAKED
 		, v.YEAR
@@ -313,12 +323,105 @@ ORDER BY v.MAKED ")
 
 
 ```{r}
-data2
+head(data2)
 
 ```
 
+###Convert to numerics, factor and truncate
+
+```{r}
+data2$HIC <- as.numeric(gsub(",","", data2$HIC))
+data2$LFL <- as.numeric(gsub(",","", data2$LFL))
+data2$RFL <- as.numeric(gsub(",","", data2$RFL))
+data2$YEAR <- as.numeric(data2$YEAR)
+data2$BODYD <- as.factor(data2$BODYD)
+data2$MAKED <- as.factor(data2$MAKED)
+data2$OCCLOCD <- as.factor(data2$OCCLOCD)
+
+data2$HIC <- trunc(data2$HIC)
+data2$LFL <- trunc(data2$LFL)
+data2$RFL <- trunc(data2$RFL)
 
 
+```
+
+# Transformation
+
+### The data obtained from the more granular query has many more rows with repeating fields of data.  To get a better understanding of this data, we will transform into a easier visual  model.  
+
+```{r}
+
+# library(treemap)
+# 
+# treemap(data2,
+#        index=c("MAKED", "BODYD"),
+#        vSize="YEAR",
+#        #vColor="GNI",
+#        #type="YEAR"
+#        )
+
+library(data.tree)
+#data(GNI2014)
+
+#(GNI2014)
+
+
+data2$pathString <- paste("Vehicle_Make", 
+                            data2$YEAR, 
+                            data2$MAKED, 
+                            data2$BODYD,
+                            data2$OCCLOCD,
+                            sep = "/")
+
+data2tree <- as.Node(data2)
+#print(data2tree, "HIC", "LFL", "RFL", limit = 200)
+#plot(population)
+
+#library(networkD3)
+#acmeNetwork <- ToDataFrameNetwork(data2tree, "name")
+#simpleNetwork(acmeNetwork[-3], fontSize = 12)
+
+#plot(as.dendrogram(data2tree), center = TRUE)
+
+# works: print(data2tree, "HIC", "LFL", "RFL")
+```
+
+### Reasons for transformation:  It is increasingly becoming difficult to view the results because of the number of records in the resulset.  Every time another variable of interest is added it exponentially increases the output of records.  The difficulty becomes in "visually" consuming the data without removing any of the results.  The following data that has been transformed into a tree structure and is still to large to consume "visually".  So, we decided to ask our questions using subsets of the data as depicted below.  
+
+
+```{r}
+#SetGraphStyle(data2tree, rankdir = "LR", dpi="70")
+#SetEdgeStyle(data2tree, arrowhead = "vee", color = "grey35", penwidth = "20")
+#SetNodeStyle(data2tree, style = "filled,rounded", shape = "box", fillcolor = "GreenYellow", 
+#            fontname = "helvetica", tooltip = GetDefaultTooltip, fontsize = "36", height="0.75")
+#SetNodeStyle(data2tree$ACURA, fillcolor = "LightBlue", penwidth = "5px")
+
+#plot(data2tree$`2019`$ACURA, output = "graph")
+
+#plot(as.dendrogram(data2tree), center = TRUE)
+
+print(data2tree, "HIC", "LFL", "RFL")
+
+```
+
+### What is the minimum HIC?
+
+```{r}
+
+subset(data2, (data2$HIC >= 1 & data2$HIC <= 10) & (data2$LFL >= -10 & data2$LFL <= -1) & (data2$RFL >= -10 & data2$RFL <= -1), select=c(MAKED, YEAR, BODYD, OCCLOCD, HIC, LFL, RFL))
+
+subset(data2, (data2$HIC >= 11 & data2$HIC <= 50) & (data2$LFL >= -50 & data2$LFL <= -11) & (data2$RFL >= -50 & data2$RFL <= -11), select=c(MAKED, YEAR, BODYD, OCCLOCD, HIC, LFL, RFL))
+
+subset(data2, (data2$HIC >= 51 & data2$HIC <= 100) & (data2$LFL >= -100 & data2$LFL <= -51) & (data2$RFL >= -100 & data2$RFL <= -51), select=c(MAKED, YEAR, BODYD, OCCLOCD, HIC, LFL, RFL))
+
+
+
+```
+
+###Discussion: In the first output, we select a couple of vehicles with the least amount of injury to the head and legs.  In addition, two additional ranges of vehicles are provided, where minimal head and leg injuries were reported.  These display results with vehicle year, vehicle body type, and occupant location in the vehicle.  The occupant location, is the test dummy used to measure different crash impact forces.  
+
+
+###Difficulty Encountered: As mentioned above, visualizing the large number of rows is difficult with any ease. This presented challenges in displaying the results so a consumer can easily find their vehicle of choice.  So, we decided to present the results in subsets of the overall results.    
 
 
 References:
@@ -332,3 +435,5 @@ https://www.nhtsa.gov/sites/nhtsa.dot.gov/files/rev_criteria_0.pdf
 https://www.nhtsa.gov/sites/nhtsa.dot.gov/files/rev_criteria_0.pdf
 
 https://en.wikipedia.org > wiki > Head_injury_criterion
+
+https://www.safercar.gov/Vehicle-Shoppers
