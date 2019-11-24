@@ -51,7 +51,7 @@ Specifically, Which vehicle or set of vehicles are the safest from a head and le
 ### Injury Criteria
 Head Injury Criterion, Left Femur Load, Right Femur Load
 
-# Analysis Goals 
+# Analysis Attributes 
 
 ### National Highway Traffic Safety Administration
 Based on the recommendations, following this section, provided by the National Highway Traffic Safety Administration, we want to perform analysis to determine which vehicles have the best and worst injury severity ratings based upon the criteria listed above and using the following attributes.
