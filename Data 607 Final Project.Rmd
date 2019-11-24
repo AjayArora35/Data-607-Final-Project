@@ -57,7 +57,7 @@ Head Injury Criterion, Left Femur Load, Right Femur Load
 Based on the recommendations, following this section, provided by the National Highway Traffic Safety Administration, we want to perform analysis to determine which vehicles have the best and worst injury severity ratings based upon the criteria listed above and using the following attributes.
 
 ### Attributes
-Vehicle year, Vehicle body type, and occupant location. 
+Vehicle year, Vehicle body type, and occupant location (Left-front-seat, Right-front-seat). 
 
 ### Motiviation
 The National Highway Traffic Safety Administration makes their recommendation using a star rating system. More Stars mean Safer Cars. 5-Star Safety Ratings measure the crashworthiness and rollover safety of vehicles. Five stars is the highest rating, one is the lowest. However, some of the vehicles getting a 5-star rating could be cost prohibitive for some consumers or not aligned with their personal taste. In this instance, a more detailed analysis of the injury criteria and attributes are warranted.  
