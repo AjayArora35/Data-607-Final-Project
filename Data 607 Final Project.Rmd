@@ -60,11 +60,13 @@ Based on the recommendations, following this section, provided by the National H
 Vehicle year, Vehicle body type, and occupant location (Left-front-seat, Right-front-seat). 
 
 ### Motiviation
-The National Highway Traffic Safety Administration makes their recommendation using a star rating system. More Stars mean Safer Cars. 5-Star Safety Ratings measure the crashworthiness and rollover safety of vehicles. Five stars is the highest rating, one is the lowest. However, some of the vehicles getting a 5-star rating could be cost prohibitive for some consumers or not aligned with their personal taste. In this instance, a more detailed analysis of the injury criteria and attributes are warranted.  
+The National Highway Traffic Safety Administration makes their recommendation using a star rating system. More Stars mean Safer Cars. 5-Star Safety Ratings measure the crashworthiness and rollover safety of vehicles. Five stars is the highest rating, one is the lowest. However, some of the vehicles getting a 5-star rating could be cost prohibitive for some consumers or consumers may prefer more choices. In this instance, a more detailed analysis of the injury criteria and attributes are warranted.  
 
 ### National Highway Traffic Safety Administration Recommendations
 
 ![National Highway Traffic Safety Administration Recommendations](images/Recommendations.png)
+
+The recommendations are as follows: At a HIC of 1000, there is an 18% probability of a severe head injury, a 55% probability of a serious injury and a 90% probability of a moderate head injury to the average adult. Injuries to legs represent the amount of force the legs can withstand before breaking, so closer to absolute 0 is preferred.  
 
 
 # Preparing Environment
