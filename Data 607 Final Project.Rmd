@@ -439,3 +439,42 @@ https://www.nhtsa.gov/sites/nhtsa.dot.gov/files/rev_criteria_0.pdf
 https://en.wikipedia.org > wiki > Head_injury_criterion
 
 https://www.safercar.gov/Vehicle-Shoppers
+
+------------------------------------------------------------------
+Mario's Ideas:
+
+```{r}
+testgroup <- data2 %>% group_by(MAKED) %>% summarise("Average HIC" = mean(HIC), Count = n())
+
+testgroup2 <- data2 %>% group_by(YEAR) %>% summarise("Average HIC" = mean(HIC), Count = n())
+testgroup2_lfl <- data2 %>% group_by(YEAR) %>% summarise("Average LFL" = mean(LFL), Count = n())
+testgroup2_rfl <- data2 %>% group_by(YEAR) %>% summarise("Average RFL" = mean(RFL), Count = n())
+
+testgroup3 <- data2 %>% group_by(BODYD) %>% summarise("Average HIC" = mean(HIC), Count = n())
+
+testgroup4 <- data2 %>% group_by(OCCLOCD) %>% summarise("Average HIC" = mean(HIC), Count = n())
+
+```
+
+
+```{r}
+ggplot(testgroup, aes(x=reorder(MAKED, `Average HIC`), y=`Average HIC`)) + geom_bar(stat="identity", width = 0.5, fill = "tomato2") + labs(x = "Car Make", y = "AVG HIC", title = "Average HIC by Car Make") + theme(axis.text.x = element_text(angle = 60, hjust = 1, size=8))
+```
+
+```{r}
+ggplot(testgroup2, aes(x=YEAR, y=`Average HIC`)) + geom_line(color = "tomato2") + labs(x = "Year", y = "AVG HIC", title = "Average HIC by Year") + geom_point(color = "tomato2")
+
+ggplot(testgroup2_lfl, aes(x=YEAR, y=`Average LFL`)) + geom_line(color = "tomato2") + labs(x = "Year", y = "AVG HIC", title = "Average HIC by Year") + geom_point(color = "tomato2")
+
+ggplot(testgroup2_rfl, aes(x=YEAR, y=`Average RFL`)) + geom_line(color = "tomato2") + labs(x = "Year", y = "AVG HIC", title = "Average HIC by Year") + geom_point(color = "tomato2")
+```
+
+### During 1999 The National Highway Traffic Safety Administration planned for upgrading the Federal Motor Vehicle Safety Standard (FMVSS). They added new crash specifications that required the use of additional dummies of various sizes as well as additional performance criteria that appropriately represent head injury thresholds.
+
+```{r}
+ggplot(testgroup3, aes(x=reorder(BODYD, `Average HIC`), y=`Average HIC`)) + geom_bar(stat="identity", width = 0.5, fill = "tomato2") + labs(x = "Body Type", y = "AVG HIC", title = "Average HIC by Body Type") + theme(axis.text.x = element_text(angle = 60, hjust = 1, size=8))
+```
+
+```{r}
+ggplot(testgroup4, aes(x=reorder(OCCLOCD, `Average HIC`), y=`Average HIC`)) + geom_bar(stat="identity", width = 0.5, fill = "tomato2") + labs(x = "Occupant Location", y = "AVG HIC", title = "Average HIC by Occupant Location") + theme(axis.text.x = element_text(angle = 60, hjust = 1, size=8))
+```
