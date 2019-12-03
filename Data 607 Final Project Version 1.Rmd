@@ -428,7 +428,7 @@ subset(data2, (data2$HIC >= 51 & data2$HIC <= 100) & (data2$LFL >= -100 & data2$
 
 #Further Analysis
 
-
+###What is the average HIC by Car Make?
 ```{r}
 testgroup <- data2 %>% group_by(MAKED) %>% summarise("Average HIC" = mean(HIC), Count = n())
 
@@ -447,19 +447,27 @@ testgroup4 <- data2 %>% group_by(OCCLOCD) %>% summarise("Average HIC" = mean(HIC
 ggplot(testgroup, aes(x=reorder(MAKED, `Average HIC`), y=`Average HIC`)) + geom_bar(stat="identity", width = 0.5, fill = "tomato2") + labs(x = "Car Make", y = "AVG HIC", title = "Average HIC by Car Make") + theme(axis.text.x = element_text(angle = 60, hjust = 1, size=8))
 ```
 
+###What is the average HIC by Year?
+###What is the average LFL by Year?
+###What is the average RFL by Year?
+
 ```{r}
 ggplot(testgroup2, aes(x=YEAR, y=`Average HIC`)) + geom_line(color = "tomato2") + labs(x = "Year", y = "AVG HIC", title = "Average HIC by Year") + geom_point(color = "tomato2")
 
-ggplot(testgroup2_lfl, aes(x=YEAR, y=`Average LFL`)) + geom_line(color = "tomato2") + labs(x = "Year", y = "AVG HIC", title = "Average HIC by Year") + geom_point(color = "tomato2")
+ggplot(testgroup2_lfl, aes(x=YEAR, y=`Average LFL`)) + geom_line(color = "tomato2") + labs(x = "Year", y = "AVG LFL", title = "Average LFL by Year") + geom_point(color = "tomato2")
 
-ggplot(testgroup2_rfl, aes(x=YEAR, y=`Average RFL`)) + geom_line(color = "tomato2") + labs(x = "Year", y = "AVG HIC", title = "Average HIC by Year") + geom_point(color = "tomato2")
+ggplot(testgroup2_rfl, aes(x=YEAR, y=`Average RFL`)) + geom_line(color = "tomato2") + labs(x = "Year", y = "AVG RFL", title = "Average RFL by Year") + geom_point(color = "tomato2")
 ```
 
 ### During 1999 The National Highway Traffic Safety Administration planned for upgrading the Federal Motor Vehicle Safety Standard (FMVSS). They added new crash specifications that required the use of additional dummies of various sizes as well as additional performance criteria that appropriately represent head injury thresholds.
 
+
+###What is the average HIC by Body Type?
 ```{r}
 ggplot(testgroup3, aes(x=reorder(BODYD, `Average HIC`), y=`Average HIC`)) + geom_bar(stat="identity", width = 0.5, fill = "tomato2") + labs(x = "Body Type", y = "AVG HIC", title = "Average HIC by Body Type") + theme(axis.text.x = element_text(angle = 60, hjust = 1, size=8))
 ```
+
+###What is the average HIC by Occupant Location?
 
 ```{r}
 ggplot(testgroup4, aes(x=reorder(OCCLOCD, `Average HIC`), y=`Average HIC`)) + geom_bar(stat="identity", width = 0.5, fill = "tomato2") + labs(x = "Occupant Location", y = "AVG HIC", title = "Average HIC by Occupant Location") + theme(axis.text.x = element_text(angle = 60, hjust = 1, size=8))
