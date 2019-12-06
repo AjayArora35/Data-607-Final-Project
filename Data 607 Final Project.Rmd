@@ -66,12 +66,13 @@ vehicle make, Vehicle year, Vehicle body type, and occupant location (Left-front
 
 ### Motiviation
 
-The National Highway Traffic Safety Administration makes their recommendation using a star rating system. More Stars mean Safer Cars. 5-Star Safety Ratings measure the crashworthiness and rollover safety of vehicles. Five stars is the highest rating, one is the lowest. However, some of the vehicles getting a 5-star rating could be cost prohibitive for some consumers or not aligned with their personal taste. In this instance, a more detailed analysis of the injury criteria and attributes are warranted.  
+The National Highway Traffic Safety Administration makes their recommendation using a star rating system. More Stars mean Safer Cars. 5-Star Safety Ratings measure the crashworthiness and rollover safety of vehicles. Five stars is the highest rating, one is the lowest. However, some of the vehicles getting a 5-star rating could be cost prohibitive for some consumers or to provide a larger variety of choices. In this instance, a more detailed analysis of the injury criteria and attributes are warranted.  
 
 ### National Highway Traffic Safety Administration Recommendations
 
 ![National Highway Traffic Safety Administration Recommendations](images/Recommendations.png)
 
+The National Highway Traffic Safety Administration Recommendations provide a basis for vehicle safety for crash worthiness and rollover. The recommendation image provides a baseline for head, leg and chest injury.  In summary, the close the value is to absolute 0, the more likely the occupant will have less severe injury.   
 
 # Preparing Environment
 
