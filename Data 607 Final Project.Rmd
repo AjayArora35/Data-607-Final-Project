@@ -45,7 +45,7 @@ We both decided to communicate via email and/or #Slack.  In addition, we establi
 
 The data was acquired at https://www-nrd.nhtsa.dot.gov/database/veh/veh.htm.  (https://www-nrd.nhtsa.dot.gov/database/VSR/Download.aspx?tstno=&curno=&database=v&name=Vehdb-export&format=export)  
 
-### Goal
+# Objective
 
 Specifically, Which vehicle or set of vehicles are the safest from a head and leg injury perspective.
 
