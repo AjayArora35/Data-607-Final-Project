@@ -72,7 +72,7 @@ The National Highway Traffic Safety Administration makes their recommendation us
 
 ![National Highway Traffic Safety Administration Recommendations](images/Recommendations.png)
 
-The National Highway Traffic Safety Administration Recommendations provide a basis for vehicle safety for crash worthiness and rollover. The recommendation image provides a baseline for head, leg and chest injury.  In summary, the close the value is to absolute 0, the more likely the occupant will have less severe injury.   
+The National Highway Traffic Safety Administration Recommendations provide a basis for vehicle safety for crashworthiness and rollover. The recommendation image provides a baseline for head, leg and chest injury.  In summary, the close the value is to absolute 0, the more likely the occupant will have less severe injury.   
 
 # Preparing Environment
 
@@ -348,6 +348,51 @@ head(attrMake)
 ```
 
 ### The car make that has the highest number of crash tests in our data is Ford, and is then followed by Toyota, Honda, Chevrolet, Dodge, and Nissan to name a few.
+
+```{r}
+#data <- read.csv(file="https://raw.githubusercontent.com/AjayArora35/Data-607-Group-Project-3/master/Data%20Science%20Software%20Skills.csv", header=TRUE, stringsAsFactors = FALSE)
+#data2C <- read.csv(file="https://raw.githubusercontent.com/AjayArora35/Data-607-Group-Project-3/master/Data%20Science%20Computing%20Skills.csv", header=TRUE, stringsAsFactors = FALSE)
+cn <- dbConnect(drv      = RMySQL::MySQL(), 
+                username = "admin", 
+                password = "Data__607", 
+                host     = "database-1.cxdov2mcmzlo.us-east-2.rds.amazonaws.com", 
+                port     = 3306, 
+                dbname   = "data607finalproject")
+data3 <- dbGetQuery(cn, "SELECT 
+COUNT(RD.MAKED) AS TotalMakes,
+RD.MAKED
+FROM
+(
+SELECT
+v.MAKED
+  FROM data607finalproject.test t
+  inner join data607finalproject.veh v
+  on(v.TSTNO = t.TSTNO)
+  inner join data607finalproject.occ o
+  on(o.TSTNO = v.TSTNO)
+  inner join data607finalproject.rest r
+  on(r.TSTNO = t.TSTNO)
+WHERE v.MAKED != 'NHTSA' 
+	AND v.MAKED NOT IN ('MCI', 'OTHER') 
+	AND  (o.LFEM != '' AND o.LFEM != 0) 
+	AND (o.RFEM != '' AND o.RFEM != 0)
+	AND (r.DEPLOYD = N'DEPLOYED PROPERLY')
+	AND (o.HIC != '' AND o.HIC != 0)
+	AND (v.YEAR != 0 and v.YEAR != '')
+GROUP BY
+v.MAKED
+,v.MODELD
+)RD
+GROUP BY
+RD.MAKED		
+ORDER BY COUNT(RD.MAKED) DESC ")
+```
+
+
+```{r}
+data3
+```
+
 
 ```{r}
 ggplot(attrMake, aes(x=reorder(MAKED, -Count), y=Count)) + geom_bar(stat="identity", width = 0.5, fill = "tomato2") + labs(x = "Car Make", y = "Count", title = "Number of Crash Tests by Car Make") + theme(axis.text.x = element_text(angle = 60, hjust = 1, size=8))
